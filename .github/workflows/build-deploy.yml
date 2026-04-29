@@ -1,0 +1,131 @@
+name: Build & Deploy Anchor Program
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'programs/**'
+      - 'Cargo.toml'
+      - 'Anchor.toml'
+  workflow_dispatch:
+
+env:
+  SOLANA_VERSION: "1.18.26"
+  ANCHOR_VERSION: "0.30.1"
+  RUST_TOOLCHAIN: "1.79.0"
+
+jobs:
+  build:
+    name: Build Anchor Program
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Rust
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.rustup/toolchains
+            target/
+          key: rust-${{ env.RUST_TOOLCHAIN }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: rust-${{ env.RUST_TOOLCHAIN }}-
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+
+      - name: Install Solana CLI
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/v${{ env.SOLANA_VERSION }}/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Install Anchor CLI
+        run: |
+          cargo install --git https://github.com/coral-xyz/anchor \
+            --tag v${{ env.ANCHOR_VERSION }} anchor-cli --locked --force
+          anchor --version
+
+      - name: Generate dummy keypair
+        run: |
+          mkdir -p ~/.config/solana
+          solana-keygen new --no-bip39-passphrase -o ~/.config/solana/id.json
+          solana config set --url devnet
+
+      - name: Build program
+        run: anchor build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: private-futarchy-program
+          path: |
+            target/deploy/private_futarchy.so
+            target/deploy/private_futarchy-keypair.json
+            target/idl/private_futarchy.json
+          retention-days: 7
+
+  deploy:
+    name: Deploy to Devnet
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Install Solana CLI
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/v${{ env.SOLANA_VERSION }}/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: private-futarchy-program
+          path: target/deploy/
+
+      - name: Set up deployer wallet
+        run: |
+          mkdir -p ~/.config/solana
+          echo '${{ secrets.DEPLOYER_KEYPAIR }}' > ~/.config/solana/id.json
+          solana config set --url devnet
+          solana balance
+
+      - name: Airdrop if needed
+        run: |
+          BALANCE=$(solana balance | awk '{print $1}')
+          if (( $(echo "$BALANCE < 3" | bc -l) )); then
+            solana airdrop 3 || true
+            sleep 3
+          fi
+
+      - name: Deploy program
+        run: |
+          solana program deploy \
+            --program-id target/deploy/private_futarchy-keypair.json \
+            target/deploy/private_futarchy.so
+
+      - name: Print program ID
+        run: |
+          PROGRAM_ID=$(solana-keygen pubkey target/deploy/private_futarchy-keypair.json)
+          echo "✅ Deployed: $PROGRAM_ID" >> $GITHUB_STEP_SUMMARY
+
+      - name: SCP to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: root
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "target/deploy/private_futarchy.so,target/deploy/private_futarchy.json"
+          target: "/root/putgy/private-futarchy/target/deploy/"
+
+      - name: Restart agent
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: root
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: pm2 restart futarchy-agent || true
