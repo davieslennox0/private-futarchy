@@ -6,7 +6,7 @@ use light_sdk::{
     LightTraits,
 };
 
-declare_id!("PFutCHYxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+declare_id!("B3bzZZ4iRSPzajSenzJoeZDLFusn9U8g4UsWdKj3opvK");
 
 pub mod errors;
 pub mod instructions;

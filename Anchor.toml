@@ -7,10 +7,10 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-private_futarchy = "PFutCHYxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+private_futarchy = "B3bzZZ4iRSPzajSenzJoeZDLFusn9U8g4UsWdKj3opvK"
 
 [programs.devnet]
-private_futarchy = "PFutCHYxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+private_futarchy = "B3bzZZ4iRSPzajSenzJoeZDLFusn9U8g4UsWdKj3opvK"
 
 [registry]
 url = "https://api.apr.dev"
