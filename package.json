@@ -1,0 +1,20 @@
+{
+  "name": "private-futarchy",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": ["sdk", "agent", "app"],
+  "scripts": {
+    "build:sdk":   "yarn workspace @private-futarchy/sdk build",
+    "build:agent": "yarn workspace private-futarchy-agent build",
+    "build:app":   "yarn workspace private-futarchy-app build",
+    "build":       "yarn build:sdk && yarn build:agent && yarn build:app",
+    "dev:agent":   "yarn workspace private-futarchy-agent dev",
+    "dev:app":     "yarn workspace private-futarchy-app dev",
+    "test:sdk":    "yarn workspace @private-futarchy/sdk test",
+    "test:anchor": "anchor test",
+    "test":        "yarn test:sdk && yarn test:anchor"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}

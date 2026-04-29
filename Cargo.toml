@@ -1,0 +1,15 @@
+[workspace]
+members = [
+    "programs/private-futarchy",
+]
+resolver = "2"
+
+[profile.release]
+overflow-checks = true
+lto = "fat"
+opt-level = 3
+codegen-units = 1
+
+[profile.release.build-override]
+opt-level = 3
+codegen-units = 1
