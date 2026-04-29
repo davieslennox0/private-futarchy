@@ -11,9 +11,9 @@ on:
   workflow_dispatch:
 
 env:
-  SOLANA_VERSION: "1.18.26"
+  SOLANA_VERSION: "2.3.0"
   ANCHOR_VERSION: "0.31.1"
-  RUST_TOOLCHAIN: "1.85.0"
+  RUST_TOOLCHAIN: "stable"
 
 jobs:
   build:

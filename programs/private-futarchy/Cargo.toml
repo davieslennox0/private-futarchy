@@ -18,12 +18,12 @@ default = []
 [dependencies]
 anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
 anchor-spl = { version = "0.31.1", features = ["token"] }
-light-sdk = "0.17.1"
-light-system-program = "1.2.0"
-account-compression = "1.2.0"
+light-sdk = { git = "https://github.com/Lightprotocol/light-protocol", rev = "main", package = "light-sdk" }
+light-system-program = { git = "https://github.com/Lightprotocol/light-protocol", rev = "main", package = "light-system-program-anchor" }
+account-compression = { git = "https://github.com/Lightprotocol/light-protocol", rev = "main", package = "account-compression", features = ["cpi"] }
 pyth-solana-receiver-sdk = "0.4.0"
 
 [dev-dependencies]
-anchor-client = "0.30.1"
-solana-program-test = "1.18"
+anchor-client = "0.31.1"
+solana-program-test = "2.1"
 tokio = { version = "1", features = ["full"] }
